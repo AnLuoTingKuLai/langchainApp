@@ -1,16 +1,16 @@
 /**
- * 翻译页：输入原文与目标语言，流式展示翻译结果。
+ * 翻译页：输入原文与目标语言，展示完整译文。
  * 使用 Arco Design 表单、卡片与反馈组件；目标语言与 Pinia app store 同步。
  */
 <template>
   <!-- 翻译页：说明 + 表单 + 结果 -->
   <div class="translatePage">
-    <!-- 说明：浏览器内 LangChain 流式翻译 -->
+    <!-- 说明：浏览器内 LangChain 一次返回完整译文 -->
     <a-typography-paragraph
       type="secondary"
       class="translatePage__desc"
     >
-      输入文本后直接调用浏览器内 LangChain 链进行流式翻译。
+      输入文本后直接调用浏览器内 LangChain 进行翻译。
     </a-typography-paragraph>
 
     <!-- 表单：目标语言、原文与提交 -->
@@ -74,7 +74,7 @@
       @close="error = ''"
     />
 
-    <!-- 译文结果：流式追加，加载中显示光标 -->
+    <!-- 译文结果：invoke 返回后整段展示，加载中显示光标 -->
     <a-card
       v-if="result || loading"
       class="translatePage__result"
@@ -104,15 +104,12 @@ const formModel = reactive({
   language: appStore.defaultLanguage,
   text: 'hello'
 });
-/** 流式拼接后的译文 */
+/** 一次返回的完整译文 */
 const result = ref('');
 /** 请求进行中，阻止重复提交 */
 const loading = ref(false);
 /** 错误信息 */
 const error = ref('');
-
-/** 用于取消进行中的请求 */
-let abortController: AbortController | null = null;
 
 // ====== 事件处理 ======
 
@@ -124,7 +121,7 @@ function onLanguageChange () {
 }
 
 /**
- * 提交翻译：直接消费 LangChain 流，逐段写入 result
+ * 提交翻译：await invoke 的完整消息，把正文写入 result
  */
 async function onSubmit () {
   const input = formModel.text.trim();
@@ -138,28 +135,20 @@ async function onSubmit () {
   // 提交时再同步一次语言偏好
   appStore.setDefaultLanguage(formModel.language);
 
-  // 新请求前取消上一次，避免旧流继续写入 result
-  abortController?.abort();
-  abortController = new AbortController();
-
   loading.value = true;
   error.value = '';
   result.value = '';
 
   try {
-    // chain.stream 返回 Promise<AsyncIterable>，须先 await 再迭代
-    const stream = await streamTranslate(
-      { text: input, language: formModel.language.trim() || '中文' },
-      { signal: abortController.signal }
-    );
+    // llm.invoke 一次返回完整 AIMessage，正文在 text
+    const message = await streamTranslate({
+      text: input,
+      language: formModel.language.trim() || '中文'
+    });
 
-    for await (const chunk of stream) {
-      result.value += chunk;
-    }
+    result.value = message.text;
   } catch (err) {
     const caught = err as Error;
-    // 主动取消不算失败
-    if (caught.name === 'AbortError') return;
     error.value = caught.message || '翻译失败';
   } finally {
     loading.value = false;
