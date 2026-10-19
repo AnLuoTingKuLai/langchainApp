@@ -17,6 +17,7 @@ alwaysApply: false
 ## 基本原则
 
 - 新组件用 Vue 3 Composition API + `<script setup>`。
+- `.vue` 块顺序为 `<template>`、`<script>`、`<style>`。
 - 页面与表单优先使用 Arco Design Vue 组件（`a-layout` / `a-form` / `a-input` / `a-button` / `a-card` 等），布局与交互对齐 [Arco 文档](https://arco.design/vue/docs/start)。
 - 组件职责单一：页面组件管业务流程，公共组件管复用展示/交互。
 - 不用 mixin。旧代码已有 mixin 保留，新逻辑抽成 composable。

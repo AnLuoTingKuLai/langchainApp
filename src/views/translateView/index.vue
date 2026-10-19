@@ -1,7 +1,3 @@
-/**
- * 翻译页：输入原文与目标语言，展示完整译文。
- * 使用 Arco Design 表单、卡片与反馈组件；目标语言与 Pinia app store 同步。
- */
 <template>
   <!-- 翻译页：说明 + 表单 + 结果 -->
   <div class="translatePage">
@@ -22,17 +18,23 @@
         :model="formModel"
         layout="vertical"
       >
-        <!-- 目标语言：与 app store 双向同步，刷新后保留 -->
+        <!-- 目标语言：下拉只选中文或英文，变更后写入 store，刷新保留 -->
         <a-form-item
           label="目标语言"
           field="language"
         >
-          <a-input
+          <a-select
             v-model="formModel.language"
-            placeholder="例如：中文、English、日本語"
-            allow-clear
             @change="onLanguageChange"
-          />
+          >
+            <a-option
+              v-for="item in TRANSLATE_LANGUAGE_MAP_LIST"
+              :key="item.key"
+              :value="item.key"
+            >
+              {{ item.name }}
+            </a-option>
+          </a-select>
         </a-form-item>
 
         <!-- 原文：翻译中禁用，避免半途改稿 -->
@@ -90,10 +92,17 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * 翻译页：输入原文与目标语言，展示完整译文。
+ * 使用 Arco Design 表单、卡片与反馈组件；目标语言与 Pinia app store 同步。
+ */
+import type { TranslateLanguage } from '@/constants';
+
 import { reactive, ref } from 'vue';
 
-import { streamTranslate } from '@/ai';
+import * as ai from '@/ai';
 import { useAppStore } from '@/store';
+import { TRANSLATE_LANGUAGE_MAP_LIST } from '@/constants';
 
 // ====== 状态 ======
 
@@ -101,7 +110,8 @@ const appStore = useAppStore();
 
 /** Arco Form model：目标语言与原文 */
 const formModel = reactive({
-  language: appStore.defaultLanguage,
+  // 历史自由输入若不在枚举 key 里，回落到第一项，避免下拉没有选中项
+  language: resolveTranslateLanguage(appStore.defaultLanguage),
   text: 'hello'
 });
 /** 一次返回的完整译文 */
@@ -112,6 +122,17 @@ const loading = ref(false);
 const error = ref('');
 
 // ====== 事件处理 ======
+
+/**
+ * 把已保存的语言收成枚举 key。
+ * @param language store 里的目标语言，可能是旧的自由输入
+ * @returns 命中的 key；未命中时用列表第一项
+ */
+function resolveTranslateLanguage (language: string): TranslateLanguage {
+  const matched = TRANSLATE_LANGUAGE_MAP_LIST.find((item) => item.key === language);
+  if (matched) return matched.key;
+  return TRANSLATE_LANGUAGE_MAP_LIST[0].key;
+}
 
 /**
  * 目标语言变更时写入 store，便于下次进入页面复用
@@ -141,10 +162,12 @@ async function onSubmit () {
 
   try {
     // llm.invoke 一次返回完整 AIMessage，正文在 text
-    const message = await streamTranslate({
+    debugger;
+    const message = await ai.streamTranslate({
       text: input,
-      language: formModel.language.trim() || '中文'
+      language: formModel.language || TRANSLATE_LANGUAGE_MAP_LIST[0].key
     });
+    debugger;
 
     result.value = message.text;
   } catch (err) {

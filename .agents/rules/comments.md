@@ -29,6 +29,8 @@ alwaysApply: false
 
 ### 1. 文件头（每个 `.vue` / 业务 `.ts` 文件）
 
+`.vue` 文件块顺序是 `<template>`、`<script>`、`<style>`。文件头写在 `<script>` 内、首个 `import` 之前，不放在 `<template>` 上方。
+
 在首个 `import` 之前写块注释，说明：
 
 - 文件职责（这个模块解决什么问题）

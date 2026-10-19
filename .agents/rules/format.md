@@ -68,6 +68,7 @@ const previewList = ref<CinemaRow[]>([]);
 
 ## Vue
 
+- `.vue` 单文件块顺序为 `<template>`、`<script>`、`<style>`，由 ESLint `vue/block-order` 检查。
 - 允许带参数的 `v-model`。
 - 单行和多行元素内容不强制换行，但要保持可读。
 - 不强制自闭合标签，按当前文件风格处理。

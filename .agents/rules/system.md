@@ -10,6 +10,7 @@ alwaysApply: true
 
 - 本项目是 Vue 3 + Vite 的翻译助手，用于熟悉 LangChain（前端直接调用 LangChain，无 Express）。
 - 新代码使用 Vue 3 Composition API（优先 `<script setup lang="ts">`）、Vue Router、Pinia。
+- `.vue` 块顺序为 `<template>`、`<script>`、`<style>`。
 - UI 组件与布局使用 [Arco Design Vue](https://arco.design/vue/docs/start)（`@arco-design/web-vue`，在 `main.ts` 完整引入）；不随意再引入其他 UI 库。
 - 工程基建（ESLint / TS / axios / Less / Pinia）对齐 `web-admin-movie-engine` 的精简版。
 

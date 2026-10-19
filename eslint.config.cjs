@@ -39,6 +39,9 @@ module.exports = [
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 2,
       '@typescript-eslint/no-explicit-any': 'warn',
+      'vue/block-order': ['error', {
+        order: ['template', 'script', 'style']
+      }],
       'vue/html-indent': ['error', 2],
       'vue/no-v-model-argument': 'off',
       'vue/singleline-html-element-content-newline': 'off',

@@ -8,6 +8,7 @@ alwaysApply: false
 
 ## 组件
 
+- `.vue` 单文件块顺序固定为 `<template>`、`<script>`、`<style>`。文件头注释写在 `<script>` 内、首个 `import` 之前，不放在 `<template>` 前面。没有样式时可以不写 `<style>`。
 - 组件优先使用 `<script setup lang="ts">`，避免 Options API；新代码统一 TypeScript。
 - 组件职责单一，逻辑复杂时抽组合式函数。
 - 模板保持简洁，复杂条件/过滤/格式化放计算属性或函数。

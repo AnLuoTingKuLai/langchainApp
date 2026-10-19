@@ -36,6 +36,7 @@
 - 代码胜文档：代码与文档冲突时以代码和实际配置为准
 - 不过度设计：写当前需求的最简代码
 - 新代码使用 Vue 3 Composition API 与 `<script setup lang="ts">`
+- `.vue` 块顺序为 `<template>`、`<script>`、`<style>`
 - 新逻辑不使用 mixin，优先抽成组合式函数
 - 配置型常量（选项列表、静态映射等）使用全大写下划线，如 `CONDITION_CHIP_LIST`
 - 禁止嵌套三元表达式；单层三元允许
