@@ -4,6 +4,7 @@
  */
 
 export { llm, DEFAULT_GEMINI_MODEL } from './main';
-export { streamTranslate } from './translate';
+export { streamTranslate, translateGraph, LONG_TEXT_MIN_LENGTH } from './translate';
 export type { StreamCallConfig } from './types';
-export type { TranslateInput, TranslateStreamConfig } from './translate/types';
+export type { TranslateGraphState } from './translate';
+export type { TranslateInput, TranslateResult, TranslateStreamConfig } from './translate/types';

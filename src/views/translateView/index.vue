@@ -1,12 +1,12 @@
 <template>
-  <!-- 翻译页：说明 + 表单 + 结果 -->
+  <!-- 翻译页：说明 + 表单 + 初译 / 润色双结果 -->
   <div class="translatePage">
-    <!-- 说明：浏览器内 LangChain 一次返回完整译文 -->
+    <!-- 说明：浏览器内 LangChain；原文长度 > 阈值时额外润色 -->
     <a-typography-paragraph
       type="secondary"
       class="translatePage__desc"
     >
-      输入文本后直接调用浏览器内 LangChain 进行翻译。
+      输入文本后直接调用浏览器内 LangChain 进行翻译。原文超过 {{ LONG_TEXT_MIN_LENGTH }} 个字符时会在初译后再做润色，两份结果分别展示。
     </a-typography-paragraph>
 
     <!-- 表单：目标语言、原文与提交 -->
@@ -76,33 +76,66 @@
       @close="error = ''"
     />
 
-    <!-- 译文结果：invoke 返回后整段展示，加载中显示光标 -->
-    <a-card
-      v-if="result || loading"
-      class="translatePage__result"
-      title="译文"
-      :bordered="true"
+    <!-- 结果区：初译与润色分栏展示 -->
+    <div
+      v-if="showResultArea"
+      class="translatePage__results"
     >
-      <pre class="translatePage__resultBody">{{ result }}<span
-        v-if="loading"
-        class="translatePage__cursor"
-      >|</span></pre>
-    </a-card>
+      <!-- 原文翻译：始终展示 graph 的 translation -->
+      <a-card
+        class="translatePage__result"
+        title="原文翻译"
+        :bordered="true"
+      >
+        <pre class="translatePage__resultBody">{{ translation }}<span
+          v-if="loading && !translation"
+          class="translatePage__cursor"
+        >|</span></pre>
+      </a-card>
+
+      <!-- 润色译文：有内容则展示；短文结束后用次要文案说明未润色 -->
+      <a-card
+        class="translatePage__result"
+        title="润色译文"
+        :bordered="true"
+      >
+        <pre
+          v-if="polished"
+          class="translatePage__resultBody"
+        >{{ polished }}</pre>
+        <pre
+          v-else-if="loading"
+          class="translatePage__resultBody"
+        ><span class="translatePage__cursor">|</span></pre>
+        <a-typography-paragraph
+          v-else
+          type="secondary"
+          class="translatePage__emptyHint"
+        >
+          原文未超过 {{ LONG_TEXT_MIN_LENGTH }} 个字符，未进行润色。
+        </a-typography-paragraph>
+      </a-card>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 /**
- * 翻译页：输入原文与目标语言，展示完整译文。
+ * 翻译页：输入原文与目标语言，分栏展示初译与润色译文。
  * 使用 Arco Design 表单、卡片与反馈组件；目标语言与 Pinia app store 同步。
  */
 import type { TranslateLanguage } from '@/constants';
 
-import { reactive, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 
 import * as ai from '@/ai';
 import { useAppStore } from '@/store';
 import { TRANSLATE_LANGUAGE_MAP_LIST } from '@/constants';
+
+// ====== 常量 / 配置 ======
+
+/** 与 graph 同源阈值，说明文案与空态提示共用 */
+const LONG_TEXT_MIN_LENGTH = ai.LONG_TEXT_MIN_LENGTH;
 
 // ====== 状态 ======
 
@@ -114,12 +147,19 @@ const formModel = reactive({
   language: resolveTranslateLanguage(appStore.defaultLanguage),
   text: 'hello'
 });
-/** 一次返回的完整译文 */
-const result = ref('');
+/** 初译译文 */
+const translation = ref('');
+/** 润色译文；短文为空 */
+const polished = ref('');
 /** 请求进行中，阻止重复提交 */
 const loading = ref(false);
 /** 错误信息 */
 const error = ref('');
+
+/** 有结果或加载中时展示双结果区 */
+const showResultArea = computed(() => {
+  return Boolean(translation.value || polished.value || loading.value);
+});
 
 // ====== 事件处理 ======
 
@@ -142,7 +182,7 @@ function onLanguageChange () {
 }
 
 /**
- * 提交翻译：await invoke 的完整消息，把正文写入 result
+ * 提交翻译：写入初译与润色两份结果
  */
 async function onSubmit () {
   const input = formModel.text.trim();
@@ -158,18 +198,17 @@ async function onSubmit () {
 
   loading.value = true;
   error.value = '';
-  result.value = '';
+  translation.value = '';
+  polished.value = '';
 
   try {
-    // llm.invoke 一次返回完整 AIMessage，正文在 text
-    debugger;
-    const message = await ai.streamTranslate({
+    const result = await ai.streamTranslate({
       text: input,
       language: formModel.language || TRANSLATE_LANGUAGE_MAP_LIST[0].key
     });
-    debugger;
 
-    result.value = message.text;
+    translation.value = result.translation;
+    polished.value = result.polished;
   } catch (err) {
     const caught = err as Error;
     error.value = caught.message || '翻译失败';
@@ -193,6 +232,12 @@ async function onSubmit () {
     margin-bottom: 16px;
   }
 
+  .translatePage__results {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
   .translatePage__result {
     margin-top: 0;
   }
@@ -205,6 +250,10 @@ async function onSubmit () {
     font-size: 14px;
     line-height: 1.6;
     color: var(--color-text-1);
+  }
+
+  .translatePage__emptyHint {
+    margin-bottom: 0;
   }
 
   .translatePage__cursor {

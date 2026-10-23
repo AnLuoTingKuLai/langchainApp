@@ -26,7 +26,7 @@ alwaysApply: true
 
 ```text
 src/
-├── ai/                   # LangChain 链路（提示词 / 模型 / 链）
+├── ai/                   # LangChain / LangGraph 链路（提示词 / 模型 / 图）
 ├── api/                  # axios 封装与拦截器
 ├── assets/style/         # 全局 Less
 ├── store/                # Pinia

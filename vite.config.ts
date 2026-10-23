@@ -45,7 +45,12 @@ function langchainProviderEsbuildPlugin () {
 export default defineConfig({
   plugins: [vue(), langchainProviderImport()],
   optimizeDeps: {
-    include: ['langchain/chat_models/universal', '@langchain/google-genai'],
+    include: [
+      'langchain/chat_models/universal',
+      '@langchain/google-genai',
+      // 浏览器必须用 /web，避免拉取 Node async_hooks
+      '@langchain/langgraph/web'
+    ],
     esbuildOptions: {
       plugins: [langchainProviderEsbuildPlugin()]
     }
