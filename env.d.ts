@@ -7,7 +7,9 @@ declare module '*.vue' {
 }
 
 interface ImportMetaEnv {
-  readonly VITE_GOOGLE_API_KEY: string
+  readonly VITE_DEEPSEEK_API_KEY: string
+  readonly VITE_DEEPSEEK_MODEL?: string
+  readonly VITE_GOOGLE_API_KEY?: string
   readonly VITE_GEMINI_MODEL?: string
   readonly VITE_API_BASE_URL?: string
 }

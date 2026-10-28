@@ -188,8 +188,8 @@ async function onSubmit () {
   const input = formModel.text.trim();
   if (!input || loading.value) return;
 
-  if (!import.meta.env.VITE_GOOGLE_API_KEY) {
-    error.value = '缺少 VITE_GOOGLE_API_KEY，请在 .env 中配置';
+  if (!import.meta.env.VITE_DEEPSEEK_API_KEY) {
+    error.value = '缺少 VITE_DEEPSEEK_API_KEY，请在 .env 中配置';
     return;
   }
 
