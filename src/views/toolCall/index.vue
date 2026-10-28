@@ -73,17 +73,17 @@
       @close="error = ''"
     />
 
-    <!-- 结果区：createAgent 末条回复 -->
+    <!-- 结果区：左 AI 返回 Markdown，右格式化数据 -->
     <div
       v-if="showResultArea"
       class="toolCallPage__results"
     >
+      <!-- AI 返回：markdown 字段转 HTML 展示（来源为本机 agent，非任意用户 HTML） -->
       <a-card
         class="toolCallPage__result"
-        title="返回结果"
+        title="AI 返回"
         :bordered="true"
       >
-        <!-- 有正文：模型常返回 Markdown，转 HTML 后展示（来源为本机 agent，非任意用户 HTML） -->
         <!-- eslint-disable vue/no-v-html -->
         <div
           v-if="agentOutputHtml"
@@ -98,6 +98,32 @@
           class="toolCallPage__cursor"
         >|</span>
       </a-card>
+
+      <!-- 格式化数据：toolStrategy 产出的结构化对象（JSON） -->
+      <a-card
+        class="toolCallPage__result"
+        title="格式化数据"
+        :bordered="true"
+      >
+        <pre
+          v-if="structuredJson"
+          class="toolCallPage__jsonBody"
+        >{{ structuredJson }}</pre>
+
+        <!-- 尚无结构化结果的加载态 -->
+        <span
+          v-else-if="loading"
+          class="toolCallPage__cursor"
+        >|</span>
+
+        <!-- 无 structuredResponse：仅有自由文本回退时 -->
+        <a-typography-text
+          v-else
+          type="secondary"
+        >
+          无结构化回复
+        </a-typography-text>
+      </a-card>
     </div>
   </div>
 </template>
@@ -106,10 +132,12 @@
 /**
  * 工具调用 Demo 页：演示业务工具路由 + toolStrategy 结构化最终回复。
  * 链路实现见 `@/ai/toolCall`；页面只负责示例话术、输入、触发与结果展示。
- * 结果区：优先展示 返回结果 转成的 JSON Markdown。
+ * 结果区分两栏：格式化数据（结构化对象 JSON）+ AI 返回（markdown → HTML）。
  */
-import { computed, reactive, ref } from 'vue';
+import type { ToolCallStructuredResponse } from '@/ai';
+
 import { marked } from 'marked';
+import { computed, reactive, ref } from 'vue';
 
 import * as ai from '@/ai';
 
@@ -159,7 +187,9 @@ const EXAMPLE_CONTENT_MAP: Record<ExamplePromptKey, string> = {
 const formModel = reactive({
   content: ORDER_EXAMPLE_CONTENT
 });
-/** createAgent 末条回复（Markdown 原文） */
+/** toolStrategy 产出的结构化对象；未产出时为 null */
+const structuredResponse = ref<ToolCallStructuredResponse | null>(null);
+/** AI 面向用户的 Markdown 原文（literary/order 的 markdown 字段） */
 const agentOutput = ref('');
 /** 请求进行中，阻止重复提交 */
 const loading = ref(false);
@@ -168,7 +198,20 @@ const error = ref('');
 
 /** 有结果或加载中时展示结果区 */
 const showResultArea = computed(() => {
-  return Boolean(agentOutput.value || loading.value);
+  return Boolean(
+    structuredResponse.value ||
+    agentOutput.value ||
+    loading.value
+  );
+});
+
+/** 结构化对象格式化为可读 JSON；无对象时为空串 */
+const structuredJson = computed(() => {
+  if (!structuredResponse.value) {
+    return '';
+  }
+
+  return JSON.stringify(structuredResponse.value, null, 2);
 });
 
 /** 将 Markdown 转成可 v-html 的 HTML；空串时不渲染正文容器 */
@@ -194,7 +237,7 @@ function onPickExample (key: ExamplePromptKey) {
 }
 
 /**
- * 运行 createAgent，写入结果区。
+ * 运行 createAgent，分别写入格式化数据与 AI Markdown。
  */
 async function onSubmit () {
   const content = formModel.content.trim();
@@ -207,10 +250,12 @@ async function onSubmit () {
 
   loading.value = true;
   error.value = '';
+  structuredResponse.value = null;
   agentOutput.value = '';
 
   try {
     const result = await ai.runToolCallAgent(content);
+    structuredResponse.value = result.structuredResponse;
     agentOutput.value = result.agentOutput;
   } catch (err) {
     const caught = err as Error;
@@ -237,12 +282,33 @@ async function onSubmit () {
 
   .toolCallPage__results {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: stretch;
     gap: 16px;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
   }
 
   .toolCallPage__result {
+    flex: 1;
+    min-width: 0;
     margin-top: 0;
+  }
+
+  .toolCallPage__jsonBody {
+    margin: 0;
+    padding: 12px;
+    overflow-x: auto;
+    border-radius: 4px;
+    background: var(--color-fill-2);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--color-text-1);
   }
 
   .toolCallPage__resultBody {

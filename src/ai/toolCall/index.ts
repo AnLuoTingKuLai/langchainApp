@@ -46,9 +46,12 @@ const SYSTEM_PROMPT = `你是一名助手，可按用户意图选用业务工具
 
 业务工具跑完后，选择且只选择一个结构化回复 schema 填写：
 
-- 文学分析完成后 → literary（含 gatsbyLineCount / daisyFirstLine / summary）
-- 订单查询完成后 → order（含 orderId / status）
+- 文学分析完成后 → literary（含 gatsbyLineCount / daisyFirstLine / summary / markdown）
+- 订单查询完成后 → order（含 orderId / status / markdown）
 - 缺订单号或文档 URL 等必要参数 → clarify（含 question），不要臆造
+
+literary / order 的 \`markdown\` 必须写面向用户的 Markdown 正文（可含标题、列表），
+内容与结构化字段一致；不要把 JSON 原文塞进 markdown。
 
 ## 通用规则
 
@@ -103,12 +106,27 @@ function formatLastMessageContent (messages: BaseMessage[]): string {
 }
 
 /**
- * 把结构化回复格式化成页面可展示的 Markdown（JSON 代码块）。
+ * 把结构化回复转成页面可展示文本。
+ * literary / order 优先用模型填的 markdown；clarify 用 question；否则回退 JSON 代码块。
  * @param structuredResponse toolStrategy 产出的对象
  */
 function formatStructuredResponse (
   structuredResponse: ToolCallStructuredResponse
 ): string {
+  if (
+    structuredResponse.kind === 'literary' ||
+    structuredResponse.kind === 'order'
+  ) {
+    const markdown = structuredResponse.markdown.trim();
+    if (markdown) {
+      return markdown;
+    }
+  }
+
+  if (structuredResponse.kind === 'clarify') {
+    return structuredResponse.question;
+  }
+
   return `\`\`\`json\n${JSON.stringify(structuredResponse, null, 2)}\n\`\`\``;
 }
 

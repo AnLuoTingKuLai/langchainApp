@@ -17,6 +17,6 @@ export type ToolCallStructuredResponse = ToolStructuredResponse
 export interface ToolCallAgentResult {
   /** toolStrategy 校验后的结构化对象；未产出时为 null */
   structuredResponse: ToolCallStructuredResponse | null
-  /** 便于页面直接展示的文本（优先来自 structuredResponse） */
+  /** 便于页面直接展示的文本（literary/order 优先用 markdown 字段） */
   agentOutput: string
 }

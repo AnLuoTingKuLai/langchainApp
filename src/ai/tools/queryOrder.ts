@@ -18,7 +18,13 @@ export const QUERY_ORDER_REPLY_SCHEMA = z
   .object({
     kind: z.literal('order').describe('固定为 order，表示订单查询结果'),
     orderId: z.string().describe('订单编号'),
-    status: z.string().describe('订单状态文案，如已发货')
+    status: z.string().describe('订单状态文案，如已发货'),
+    // 面向用户展示的 Markdown；与上方结构化字段并存，页面优先渲染此字段
+    markdown: z
+      .string()
+      .describe(
+        '面向用户的 Markdown 正文：说明订单号与状态，可用简短段落或列表，勿塞原始 JSON'
+      )
   })
   .describe('订单查询结果。仅在调用了 query_order 后使用。');
 

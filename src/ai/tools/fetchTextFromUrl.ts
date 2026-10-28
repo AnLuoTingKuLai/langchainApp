@@ -29,7 +29,13 @@ export const FETCH_TEXT_FROM_URL_REPLY_SCHEMA = z
       .number()
       .nullable()
       .describe('第一个包含 Daisy 的行号（从 1 起）；未找到则为 null'),
-    summary: z.string().describe('两句中性语言概要')
+    summary: z.string().describe('两句中性语言概要'),
+    // 面向用户展示的 Markdown；与上方结构化字段并存，页面优先渲染此字段
+    markdown: z
+      .string()
+      .describe(
+        '面向用户的 Markdown 正文：含行数、行号与概要，可用标题/列表，勿塞原始 JSON'
+      )
   })
   .describe(
     '文学/文档分析结果。仅在调用了 fetch_text_from_url 并完成统计后使用。'
