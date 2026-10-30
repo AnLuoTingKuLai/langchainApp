@@ -188,11 +188,6 @@ async function onSubmit () {
   const input = formModel.text.trim();
   if (!input || loading.value) return;
 
-  if (!import.meta.env.VITE_DEEPSEEK_API_KEY) {
-    error.value = '缺少 VITE_DEEPSEEK_API_KEY，请在 .env 中配置';
-    return;
-  }
-
   // 提交时再同步一次语言偏好
   appStore.setDefaultLanguage(formModel.language);
 

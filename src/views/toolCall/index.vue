@@ -243,11 +243,6 @@ async function onSubmit () {
   const content = formModel.content.trim();
   if (!content || loading.value) return;
 
-  if (!import.meta.env.VITE_DEEPSEEK_API_KEY) {
-    error.value = '缺少 VITE_DEEPSEEK_API_KEY，请在 .env 中配置';
-    return;
-  }
-
   loading.value = true;
   error.value = '';
   structuredResponse.value = null;

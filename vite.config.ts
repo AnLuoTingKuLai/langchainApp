@@ -12,6 +12,9 @@ const STATIC_PROVIDER_IMPORT = `if (config.package === '@langchain/deepseek') {
 if (config.package === '@langchain/google-genai') {
   return (await import('@langchain/google-genai'))[config.className];
 }
+if (config.package === '@langchain/ollama') {
+  return (await import('@langchain/ollama'))[config.className];
+}
 throw new Error('未安装模型包: ' + config.package);`;
 
 const NODE_ASYNC_HOOKS_SHIM = fileURLToPath(
@@ -78,6 +81,7 @@ export default defineConfig({
       'langchain/chat_models/universal',
       '@langchain/deepseek',
       '@langchain/google-genai',
+      '@langchain/ollama',
       // 浏览器必须用 /web，避免拉取 Node async_hooks
       '@langchain/langgraph/web',
       'langchain'

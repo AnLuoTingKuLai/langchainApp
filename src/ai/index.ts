@@ -3,7 +3,7 @@
  * 页面侧优先从 `@/ai` 引入；公共配置见 main.ts，各业务链见对应子目录。
  */
 
-export { llm, DEFAULT_DEEPSEEK_MODEL } from './main';
+export { llm, createLlm, DEFAULT_DEEPSEEK_MODEL } from './main';
 export {
   queryOrder,
   fetchTextFromUrl,
