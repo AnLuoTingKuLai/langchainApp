@@ -13,7 +13,7 @@ Vue 3 + Vite + TypeScript。路由用 Vue Router，状态用 Pinia，UI 用 [Arc
 | 页面 | 路径 | 做什么 | 模型 |
 |------|------|--------|------|
 | 翻译 | `/translate` | LangGraph：先初译，长文再润色 | 本地 Ollama `deepseek-r1:8b` |
-| 工具调用 | `/toolCall` | 按意图走文学文本或订单查询，并返回结构化结果 | 云端 `deepseek-flash` |
+| 工具调用 | `/toolCall` | 按意图走文学文本或订单查询，并返回结构化结果 | 默认云端 `gemini-3-flash-preview`，失败后改用 `deepseek-flash` |
 
 模型入口在 `src/ai/main.ts` 的 `createLlm`。可传入 `ollama`、`deepseek-flash`、`gemini-3-flash-preview`。未传名字时使用 `.env` 的 `VITE_DEFAULT_MODEL`。
 
@@ -28,27 +28,15 @@ src/
 
 ## 启动
 
-需要 Node.js。翻译页还需要本机已安装并运行 [Ollama](https://ollama.com/)，且已拉取 `deepseek-r1:8b`。工具调用页需要 DeepSeek 的 API Key。
+需要 Node.js。翻译页还需要本机已安装并运行 [Ollama](https://ollama.com/)，且已拉取 `deepseek-r1:8b`。工具调用页默认走 Gemini，失败后改用 DeepSeek，因此这两边的访问凭证要写在本机环境文件里。
 
 ```bash
 npm install
 ```
 
-在项目根目录创建 `.env`（该文件已在 `.gitignore` 中，不要提交）：
+两个环境文件的字段相同，以仓库根目录的 `.env` 为准。`.env` 可以提交：凭证字段留空，模型名和本地地址填好。`.env.develop` 留在本机，字段一样，并填上凭证；该文件已在 `.gitignore` 中，不要提交。文档里不重复抄写凭证字段名。
 
-```bash
-# createLlm 未传模型名时使用，值为 ollama / deepseek-flash / gemini-3-flash-preview
-VITE_DEFAULT_MODEL=ollama
-
-# 本地 Ollama。浏览器直连该地址，没有 Vite 代理
-VITE_OLLAMA_BASE_URL=http://localhost:11434
-
-# 云端 DeepSeek
-VITE_DEEPSEEK_API_KEY=
-
-# 可选：Google Gemini
-VITE_GEMINI_API_KEY=
-```
+克隆后把 `.env` 复制为 `.env.develop`，再填值。`npm run dev` 是 `vite --mode develop`，会同时读取这两个文件，同名变量以 `.env.develop` 为准。`npm run build` 与 `npm run preview` 不加载 `.env.develop`。
 
 启动开发服务器：
 

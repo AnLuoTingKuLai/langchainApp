@@ -1,12 +1,17 @@
 /**
- * LangChain tools 统一导出。
- * Agent 侧按需从 `@/ai/tools` 引入执行工具与各自 reply schema。
+ * 工具调用图的分支实现：每条分支自带工具、提示词、回复 schema 和 invokeAgent。
+ * 只给同级 `src/ai/toolCall` 使用，不从 `@/ai` 对外导出。
  */
 import {
   fetchTextFromUrl,
-  FETCH_TEXT_FROM_URL_REPLY_SCHEMA
+  FETCH_TEXT_FROM_URL_REPLY_SCHEMA,
+  LITERARY_SYSTEM_PROMPT
 } from './fetchTextFromUrl';
-import { queryOrder, QUERY_ORDER_REPLY_SCHEMA } from './queryOrder';
+import {
+  queryOrder,
+  ORDER_SYSTEM_PROMPT,
+  QUERY_ORDER_REPLY_SCHEMA
+} from './queryOrder';
 import { CLARIFY_REPLY_SCHEMA } from './clarifyReply';
 
 import type { FetchTextFromUrlReply } from './fetchTextFromUrl';
@@ -15,22 +20,15 @@ import type { ClarifyReply } from './clarifyReply';
 
 export {
   queryOrder,
+  ORDER_SYSTEM_PROMPT,
   QUERY_ORDER_REPLY_SCHEMA,
   fetchTextFromUrl,
+  LITERARY_SYSTEM_PROMPT,
   FETCH_TEXT_FROM_URL_REPLY_SCHEMA,
   CLARIFY_REPLY_SCHEMA
 };
 
 export type { QueryOrderReply, FetchTextFromUrlReply, ClarifyReply };
-
-/**
- * 各工具（含缺参追问）最终回复 schema 汇总，供 createAgent toolStrategy 使用。
- */
-export const TOOL_REPLY_SCHEMAS = [
-  FETCH_TEXT_FROM_URL_REPLY_SCHEMA,
-  QUERY_ORDER_REPLY_SCHEMA,
-  CLARIFY_REPLY_SCHEMA
-] as const;
 
 /** Agent 最终结构化回复（三选一） */
 export type ToolStructuredResponse =

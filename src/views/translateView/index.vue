@@ -196,16 +196,24 @@ async function onSubmit () {
   translation.value = '';
   polished.value = '';
 
+  const language = formModel.language || TRANSLATE_LANGUAGE_MAP_LIST[0].key;
+  console.log('[ai] 翻译页提交', { language, textLength: input.length });
+
   try {
     const result = await ai.streamTranslate({
       text: input,
-      language: formModel.language || TRANSLATE_LANGUAGE_MAP_LIST[0].key
+      language
     });
 
+    console.log('[ai] 翻译页完成', {
+      translationLength: result.translation.length,
+      polishedLength: result.polished.length
+    });
     translation.value = result.translation;
     polished.value = result.polished;
   } catch (err) {
     const caught = err as Error;
+    console.log('[ai] 翻译页失败', { message: caught.message });
     error.value = caught.message || '翻译失败';
   } finally {
     loading.value = false;

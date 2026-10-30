@@ -50,6 +50,10 @@ async function translateNode (
   state: TranslateGraphState,
   config: LangGraphRunnableConfig
 ) {
+  console.log('[ai] translateNode 开始', {
+    language: state.language,
+    textLength: state.text.length
+  });
   const message = await llm.invoke(
     [
       { role: 'system', content: `你是一个翻译助手，把用户输入翻译成${state.language}。` },
@@ -58,6 +62,7 @@ async function translateNode (
     config
   );
 
+  console.log('[ai] translateNode 完成', { translationLength: message.text.length });
   return { translation: message.text };
 }
 
@@ -68,6 +73,7 @@ async function polishNode (
   state: TranslateGraphState,
   config: LangGraphRunnableConfig
 ) {
+  console.log('[ai] polishNode 开始', { translationLength: state.translation.length });
   const message = await llm.invoke(
     [
       {
@@ -79,6 +85,7 @@ async function polishNode (
     config
   );
 
+  console.log('[ai] polishNode 完成', { polishedLength: message.text.length });
   return { polished: message.text };
 }
 
@@ -89,10 +96,12 @@ async function polishNode (
  * @returns 下一节点名或 END
  */
 function routeAfterTranslate (state: TranslateGraphState) {
-  if (state.text.length > LONG_TEXT_MIN_LENGTH) {
-    return 'polish';
-  }
-  return END;
+  const next = state.text.length > LONG_TEXT_MIN_LENGTH ? 'polish' : END;
+  console.log('[ai] routeAfterTranslate', {
+    textLength: state.text.length,
+    next
+  });
+  return next;
 }
 
 // ====== 图编译 ======
@@ -117,6 +126,10 @@ export const translateGraph = new StateGraph(TranslateState)
  * @returns translation 为初译；polished 为润色（短文为空串）
  */
 export async function streamTranslate (input: TranslateInput): Promise<TranslateResult> {
+  console.log('[ai] streamTranslate 开始', {
+    language: input.language,
+    textLength: input.text.length
+  });
   const state = await translateGraph.invoke({
     language: input.language,
     text: input.text,
@@ -124,6 +137,10 @@ export async function streamTranslate (input: TranslateInput): Promise<Translate
     polished: ''
   });
 
+  console.log('[ai] streamTranslate 完成', {
+    translationLength: state.translation.length,
+    polishedLength: state.polished.length
+  });
   return {
     translation: state.translation,
     polished: state.polished

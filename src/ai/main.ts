@@ -2,7 +2,7 @@
  * 多模型启动器：按调用方传入的模型名，从映射表读取该模型自己的环境变量并创建 LLM。
  *
  * 对外：export createLlm、llm、DEFAULT_DEEPSEEK_MODEL。
- * 依赖 .env：VITE_DEFAULT_MODEL 为默认模型名；各模型使用独立变量，避免互相覆盖。
+ * 依赖 .env：VITE_DEFAULT_MODEL 为默认模型名。密钥在 .env.develop，仅 vite --mode develop 时加载。
  * 可传入：ollama、deepseek-flash、gemini-3-flash-preview。
  * 说明：本项目为本地学习用，密钥经 Vite 注入前端，勿用于生产部署。
  */
@@ -124,8 +124,16 @@ function getModelConfig (modelName: string | undefined): ModelConfig {
  */
 export async function createLlm (modelName = '') {
   // 未传模型名时，用 .env 的默认模型名取映射对象
-  const config = getModelConfig(modelName || import.meta.env.VITE_DEFAULT_MODEL);
-  return await initChatModel(config.modelId, config.modelFields);
+  const resolvedName = modelName || import.meta.env.VITE_DEFAULT_MODEL || '';
+  console.log('[ai] createLlm 开始', { modelName: resolvedName });
+  const config = getModelConfig(resolvedName);
+  const model = await initChatModel(config.modelId, config.modelFields);
+  console.log('[ai] createLlm 完成', {
+    modelName: resolvedName,
+    modelId: config.modelId,
+    provider: config.modelFields.modelProvider
+  });
+  return model;
 }
 
 /** 页面现有链路不传模型名，走 VITE_DEFAULT_MODEL */

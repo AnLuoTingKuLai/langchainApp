@@ -4,7 +4,7 @@
   "description": "Vue 3 + LangChain 翻译助手（本地学习用）",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --mode develop",
     "build": "vue-tsc --build && vite build",
     "preview": "vite preview",
     "type-check": "vue-tsc --build",

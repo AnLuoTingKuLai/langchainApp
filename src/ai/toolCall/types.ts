@@ -1,14 +1,14 @@
 /**
  * 工具调用 Demo 相关类型。
  */
-import type { ToolStructuredResponse } from '../tools';
+import type { ToolStructuredResponse } from './branches';
 
 export type {
   ClarifyReply,
   FetchTextFromUrlReply,
   QueryOrderReply,
   ToolStructuredResponse
-} from '../tools';
+} from './branches';
 
 /** 与历史命名兼容：结构化回复三选一 */
 export type ToolCallStructuredResponse = ToolStructuredResponse

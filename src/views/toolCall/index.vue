@@ -1,15 +1,15 @@
 <template>
   <!-- 工具调用 Demo：说明 + 示例话术 + 任务输入 + 结果 -->
   <div class="toolCallPage">
-    <!-- 说明：业务工具路由 + toolStrategy 多 schema 最终回复 -->
+    <!-- 说明：Ollama 分类后，对应分支的 createAgent 只跑一个工具 -->
     <a-typography-paragraph
       type="secondary"
       class="toolCallPage__desc"
     >
-      LangChain <code>createAgent</code> Demo：业务工具
-      <code>fetch_text_from_url</code> /
-      <code>query_order</code> 按意图选用；最终回复用
-      <code>toolStrategy</code> 约束为 literary / order / clarify 三套 Zod schema 之一。
+      本地 Ollama 先判断意图。文学走
+      <code>fetch_text_from_url</code>，订单走
+      <code>query_order</code>，缺路径或订单号则直接追问。执行侧用
+      <code>createAgent</code>，Gemini 优先，失败后再换 DeepSeek。
     </a-typography-paragraph>
 
     <!-- 表单：示例话术、任务文案与提交 -->
@@ -130,7 +130,7 @@
 
 <script setup lang="ts">
 /**
- * 工具调用 Demo 页：演示业务工具路由 + toolStrategy 结构化最终回复。
+ * 工具调用 Demo 页：Ollama 分类后，由对应分支的 createAgent 返回结构化回复。
  * 链路实现见 `@/ai/toolCall`；页面只负责示例话术、输入、触发与结果展示。
  * 结果区分两栏：格式化数据（结构化对象 JSON）+ AI 返回（markdown → HTML）。
  */
@@ -248,12 +248,19 @@ async function onSubmit () {
   structuredResponse.value = null;
   agentOutput.value = '';
 
+  console.log('[ai] 工具调用页提交', { contentLength: content.length });
+
   try {
     const result = await ai.runToolCallAgent(content);
+    console.log('[ai] 工具调用页完成', {
+      kind: result.structuredResponse?.kind ?? null,
+      outputLength: result.agentOutput.length
+    });
     structuredResponse.value = result.structuredResponse;
     agentOutput.value = result.agentOutput;
   } catch (err) {
     const caught = err as Error;
+    console.log('[ai] 工具调用页失败', { message: caught.message });
     error.value = caught.message || '运行失败';
   } finally {
     loading.value = false;
