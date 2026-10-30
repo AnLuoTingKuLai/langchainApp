@@ -3,7 +3,7 @@
  * 并用 toolStrategy 约束最终回复为各工具自带的 reply schema 之一。
  *
  * 对外：export runToolCallAgent。
- * 约束：复用 ../main.ts 的共享 LLM；工具与 reply schema 来自 ../tools；checkpointer 用 MemorySaver。
+ * 约束：每次运行用 createLlm('deepseek-flash')；工具与 reply schema 来自 ../tools；checkpointer 用 MemorySaver。
  * 说明：意图路由靠 tool description + system prompt；最终形状靠 toolStrategy(TOOL_REPLY_SCHEMAS)。
  */
 import type { ToolCallAgentResult, ToolCallStructuredResponse } from './types';
@@ -13,7 +13,7 @@ import { createAgent, toolStrategy } from 'langchain';
 import { AIMessage } from '@langchain/core/messages';
 import { MemorySaver } from '@langchain/langgraph/web';
 
-import { llm } from '../main';
+import { createLlm } from '../main';
 import {
   fetchTextFromUrl,
   queryOrder,
@@ -154,10 +154,12 @@ export async function runToolCallAgent (
   content: string
 ): Promise<ToolCallAgentResult> {
   const checkpointer = new MemorySaver();
+  // 工具调用固定使用云端 deepseek-flash，每次运行单独创建
+  const model = await createLlm('deepseek-flash');
 
   // reply schema 定义在各自工具文件内；此处只汇总进 toolStrategy
   const agent = createAgent({
-    model: llm,
+    model,
     tools: [fetchTextFromUrl, queryOrder],
     systemPrompt: SYSTEM_PROMPT,
     responseFormat: toolStrategy([...TOOL_REPLY_SCHEMAS]),
